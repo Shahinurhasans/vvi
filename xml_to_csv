@@ -1,0 +1,50 @@
+#this code snippet is used for extracting information from from xml file to csv dataframe
+
+import os
+import xml.etree.ElementTree as xet
+
+# Define the directory containing XML files
+xml_dir = "/aa"  # Change this to your actual directory
+
+# Get only XML files, skipping directories
+path = [os.path.join(xml_dir, f) for f in os.listdir(xml_dir) if f.endswith(".xml")]
+
+labels_dict = dict(filepath=[], xmin=[], xmax=[], ymin=[], ymax=[])
+
+for filename in path:
+    if os.path.isdir(filename):  # Skip directories
+        print(f"Skipping directory: {filename}")
+        continue  
+
+    try:
+        info = xet.parse(filename)  # Parse the XML file
+        root = info.getroot()
+        member_object = root.find('object')
+
+        if member_object is None:
+            print(f"No 'object' tag found in {filename}")
+            continue
+
+        labels_info = member_object.find('bndbox')
+        if labels_info is None:
+            print(f"No 'bndbox' tag found in {filename}")
+            continue
+
+        xmin = int(labels_info.find('xmin').text)
+        xmax = int(labels_info.find('xmax').text)
+        ymin = int(labels_info.find('ymin').text)
+        ymax = int(labels_info.find('ymax').text)
+
+        # Append extracted data
+        labels_dict['filepath'].append(filename)
+        labels_dict['xmin'].append(xmin)
+        labels_dict['xmax'].append(xmax)
+        labels_dict['ymin'].append(ymin)
+        labels_dict['ymax'].append(ymax)
+    
+    except Exception as e:
+        print(f"Error processing {filename}: {e}")
+
+
+#df = pd.DataFrame(labels_dict)
+#df.to_csv('labels.csv',index=False)
